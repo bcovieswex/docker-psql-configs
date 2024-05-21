@@ -1,0 +1,36 @@
+---
+- name: Connect to PostgreSQL Database
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Include vars of stuff.yaml into the 'stuff' variable (2.2).
+      ansible.builtin.include_vars:
+        file: db.yaml
+        name: database
+
+    - name: Ensure PostgreSQL client is installed
+      apt:
+        name: postgresql-client
+        state: present
+      become: yes
+
+    - name: create temp folder
+      file:
+        path: output
+        state: directory
+        mode: '0755'
+
+    - name: Template
+      template:
+        src: templates/schema.sql.j2
+        dest: output/schema.sql
+
+    - name: Connect to PostgreSQL and run a query
+      command: >
+        psql postgresql://{{ database.user }}:{{ database.user }}@{{ database.endpoint }}:{{ database.port }}/{{ database.user }}
+        -c "{{ lookup('ansible.builtin.file', './output/schema.sql') }}"
+      register: query_result
+
+    - name: Display query result
+      debug:
+        var: query_result.stdout
