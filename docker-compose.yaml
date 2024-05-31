@@ -8,6 +8,8 @@ services:
       POSTGRES_DB: dev
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - /root:./schemas
+
     ports:
       - "5432:5432"
 
